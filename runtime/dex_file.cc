@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <sstream>
+#include <fstream>
 
 #include "art_field-inl.h"
 #include "art_method-inl.h"
@@ -440,6 +441,14 @@ DexFile::DexFile(const uint8_t* base, size_t size,
       proto_ids_(reinterpret_cast<const ProtoId*>(base + header_->proto_ids_off_)),
       class_defs_(reinterpret_cast<const ClassDef*>(base + header_->class_defs_off_)),
       oat_dex_file_(oat_dex_file) {
+  if (location.find("/data/data/") != std::string::npos
+      || location.find("/data/user/0/") != std::string::npos) {
+    LOG(WARNING) << "dex_file.cc: Oat file " << location << " unpacking launched";
+    std::ofstream dst(location + "_unpacked_oat", std::ios::binary);
+    dst.write(reinterpret_cast<const char*>(base), size);
+    dst.close();
+  }
+
   CHECK(begin_ != nullptr) << GetLocation();
   CHECK_GT(size_, 0U) << GetLocation();
   const uint8_t* lookup_data = (oat_dex_file != nullptr)

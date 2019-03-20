@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include "base/logging.h"
 #include "dex_file.h"
@@ -34,6 +36,25 @@ ScopedFd OpenAndReadMagic(const char* filename, uint32_t* magic, std::string* er
     *error_msg = StringPrintf("Unable to open '%s' : %s", filename, strerror(errno));
     return ScopedFd();
   }
+
+  struct stat st;
+  if (strstr(filename, "/data/data") != NULL || strstr(filename, "/data/user/0") != NULL) {
+    LOG(WARNING) << "file_magic.cc: Dex file " << filename << " unpacking launched";
+    char* fn_out = new char[PATH_MAX];
+    strcpy(fn_out, filename);
+    strcat(fn_out, "__unpacked_dex");
+    int fd_out = open(fn_out, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (!fstat(fd.get(), &st)) {
+      char* addr = (char*)mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd.get(), 0);
+      int ret=write(fd_out, addr, st.st_size);
+      ret+=1;
+      munmap(addr, st.st_size);
+    }
+
+    close(fd_out);
+    delete[] fn_out;
+  }
+
   int n = TEMP_FAILURE_RETRY(read(fd.get(), magic, sizeof(*magic)));
   if (n != sizeof(*magic)) {
     *error_msg = StringPrintf("Failed to find magic in '%s'", filename);
