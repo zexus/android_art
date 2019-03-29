@@ -42,7 +42,7 @@ ScopedFd OpenAndReadMagic(const char* filename, uint32_t* magic, std::string* er
     LOG(WARNING) << "file_magic.cc: Dex file " << filename << " unpacking launched";
     char* fn_out = new char[PATH_MAX];
     strcpy(fn_out, filename);
-    strcat(fn_out, "__unpacked_dex");
+    strcat(fn_out, "_dex.unpacked");
     int fd_out = open(fn_out, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (!fstat(fd.get(), &st)) {
       char* addr = (char*)mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd.get(), 0);

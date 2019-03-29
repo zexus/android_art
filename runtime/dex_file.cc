@@ -444,7 +444,7 @@ DexFile::DexFile(const uint8_t* base, size_t size,
   if (location.find("/data/data/") != std::string::npos
       || location.find("/data/user/0/") != std::string::npos) {
     LOG(WARNING) << "dex_file.cc: Oat file " << location << " unpacking launched";
-    std::ofstream dst(location + "_unpacked_oat", std::ios::binary);
+    std::ofstream dst(location + "_oat.unpacked", std::ios::binary);
     dst.write(reinterpret_cast<const char*>(base), size);
     dst.close();
   }
